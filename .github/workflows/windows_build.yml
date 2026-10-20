@@ -29,7 +29,14 @@ jobs:
         run: flutter test
 
       - name: Build Windows Release Executable
-        run: flutter build windows --release --verbose
+        shell: pwsh
+        run: |
+          flutter build windows --release --verbose 2>&1 | Tee-Object -FilePath build_output.log
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "`n=== BUILD FAILED. DISPLAYING LAST 200 LINES OF BUILD LOG ==="
+            Get-Content build_output.log -Tail 200
+            exit $LASTEXITCODE
+          }
 
       - name: Package Distributable Windows Bundle
         shell: pwsh
@@ -49,7 +56,7 @@ jobs:
 
           Compress-Archive -Path "$distDir/*" -DestinationPath $outZip -Force
           Write-Host "Created $outZip successfully!"
-          
+
           Write-Host "`n=== Verifying Distributable Package Contents ==="
           Get-ChildItem -Path $distDir | Select-Object Name, Length, LastWriteTime
           Write-Host "`n=== Final Zip Package Details ==="
@@ -61,3 +68,11 @@ jobs:
           name: ShivamOS-Windows-Release
           path: ShivamOS-Windows.zip
           retention-days: 30
+
+      - name: Upload Build Logs On Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-Build-Failure-Logs
+          path: build_output.log
+          retention-days: 7
