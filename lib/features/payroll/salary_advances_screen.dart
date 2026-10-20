@@ -53,14 +53,29 @@ class SalaryAdvancesScreen extends ConsumerWidget {
             const SizedBox(height: 16),
 
             // Summary metrics
-            Row(
-              children: [
-                _metric('Total Advances Issued', CurrencyFormatter.formatPaise(totalAdvancesPaid), AppColors.primaryNavy),
-                const SizedBox(width: 12),
-                _metric('Total Recovered via Payroll', CurrencyFormatter.formatPaise(totalRecovered), AppColors.successEmerald),
-                const SizedBox(width: 12),
-                _metric('Outstanding Unsettled Advances', CurrencyFormatter.formatPaise(totalOutstanding), AppColors.accentAmber),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 700;
+                return isWide
+                    ? Row(
+                        children: [
+                          _metric('Total Advances Issued', CurrencyFormatter.formatPaise(totalAdvancesPaid), AppColors.primaryNavy),
+                          const SizedBox(width: 12),
+                          _metric('Total Recovered via Payroll', CurrencyFormatter.formatPaise(totalRecovered), AppColors.successEmerald),
+                          const SizedBox(width: 12),
+                          _metric('Outstanding Unsettled Advances', CurrencyFormatter.formatPaise(totalOutstanding), AppColors.accentAmber),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          _metric('Total Advances Issued', CurrencyFormatter.formatPaise(totalAdvancesPaid), AppColors.primaryNavy),
+                          const SizedBox(height: 10),
+                          _metric('Total Recovered via Payroll', CurrencyFormatter.formatPaise(totalRecovered), AppColors.successEmerald),
+                          const SizedBox(height: 10),
+                          _metric('Outstanding Unsettled Advances', CurrencyFormatter.formatPaise(totalOutstanding), AppColors.accentAmber),
+                        ],
+                      );
+              },
             ),
             const SizedBox(height: 16),
 

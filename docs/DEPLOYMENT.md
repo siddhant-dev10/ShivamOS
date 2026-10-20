@@ -70,13 +70,17 @@ Distribute this directory with an installer or create an MSIX package using `msi
 
 ### 3.2 Android Release Build (APK / App Bundle)
 ```bash
-# Build standalone APK for reception tablets and staff smartphones
-flutter build apk --release --split-per-abi
-
-# Output APKs located at:
-# build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+# Build, verify, and copy a universal APK to Downloads
+bash scripts/build_android_apk.sh
 ```
+The script exits with an error unless Flutter succeeds, the APK exists and is
+nonempty, and both the build artifact and copied artifact pass ZIP archive
+verification. On success it prints the exact destination and byte count:
+`~/Downloads/ShivamOS_Downloads/ShivamOS-release.apk`.
 
+For a build artifact without the copy/verification step, use
+`flutter build apk --release`. Flutter writes it to
+`build/app/outputs/flutter-apk/app-release.apk`.
 ---
 
 ## 4. Hardware & Printer Configuration

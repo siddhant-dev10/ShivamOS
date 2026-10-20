@@ -56,17 +56,25 @@ class RoomInventoryScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // Category Summary Badges
-            Row(
-              children: [
-                _categoryChip('Elegant Class', '$elegantCount / 9', HotelDefaults.elegantDoublePaise, AppColors.primaryNavy),
-                const SizedBox(width: 8),
-                _categoryChip('Royal Class', '$royalCount / 6', HotelDefaults.royalDoublePaise, AppColors.primaryNavyLight),
-                const SizedBox(width: 8),
-                _categoryChip('Corporate Class', '$corporateCount / 4', HotelDefaults.corporateDoublePaise, AppColors.accentAmber),
-                const SizedBox(width: 8),
-                _categoryChip('Suite Room', '$suiteCount / 1', HotelDefaults.suiteDoublePaise, AppColors.successEmerald),
-              ],
+            // Category Summary Cards
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 800;
+                return GridView.count(
+                  crossAxisCount: isWide ? 4 : 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: isWide ? 2.2 : 1.8,
+                  children: [
+                    _categoryCard('Elegant Class', '$elegantCount / 9', HotelDefaults.elegantDoublePaise, AppColors.electricBlue),
+                    _categoryCard('Royal Class', '$royalCount / 6', HotelDefaults.royalDoublePaise, AppColors.indigoAccent),
+                    _categoryCard('Corporate Class', '$corporateCount / 4', HotelDefaults.corporateDoublePaise, AppColors.cyanAccent),
+                    _categoryCard('Suite Room', '$suiteCount / 1', HotelDefaults.suiteDoublePaise, AppColors.accentAmber),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 16),
 
@@ -163,29 +171,40 @@ class RoomInventoryScreen extends ConsumerWidget {
     }
   }
 
-  Widget _categoryChip(String name, String count, int doubleTariff, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(name, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
-            const SizedBox(height: 2),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(count, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                Text(CurrencyFormatter.formatPaise(doubleTariff), style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-              ],
-            ),
-          ],
-        ),
+  Widget _categoryCard(String name, String count, int doubleTariff, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(count, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primaryNavy)),
+              Text('Dbl: ${CurrencyFormatter.formatPaise(doubleTariff)}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -195,19 +214,29 @@ class RoomInventoryScreen extends ConsumerWidget {
     Color fg = defaultColor;
 
     if (status == 'clean' || status == 'ready' || status == 'available' || status == 'normal') {
-      bg = AppColors.successEmerald.withOpacity(0.12);
-      fg = AppColors.successEmerald;
-    } else if (status == 'occupied' || status == 'out_of_service') {
-      bg = AppColors.dangerCrimson.withOpacity(0.12);
-      fg = AppColors.dangerCrimson;
+      bg = AppColors.availableBg;
+      fg = AppColors.availableGreen;
+    } else if (status == 'occupied') {
+      bg = AppColors.occupiedBg;
+      fg = AppColors.occupiedIndigo;
+    } else if (status == 'cleaning_required') {
+      bg = AppColors.cleaningBg;
+      fg = AppColors.cleaningOrange;
+    } else if (status == 'out_of_service') {
+      bg = AppColors.outOfServiceBg;
+      fg = AppColors.outOfServiceRed;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: fg.withOpacity(0.3)),
+      ),
       child: Text(
         status.replaceAll('_', ' ').toUpperCase(),
-        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: fg),
+        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: fg),
       ),
     );
   }

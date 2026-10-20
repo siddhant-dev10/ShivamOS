@@ -43,8 +43,11 @@ class _PendingSalariesScreenState extends ConsumerState<PendingSalariesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              spacing: 12,
+              runSpacing: 10,
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,14 +63,13 @@ class _PendingSalariesScreenState extends ConsumerState<PendingSalariesScreen> {
                     ),
                   ],
                 ),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     _filterChip('PENDING', 'Pending & Overdue'),
-                    const SizedBox(width: 8),
                     _filterChip('OVERDUE', 'Overdue Only'),
-                    const SizedBox(width: 8),
                     _filterChip('PAID', 'Settled / Paid'),
-                    const SizedBox(width: 8),
                     _filterChip('ALL', 'All Records'),
                   ],
                 ),

@@ -57,26 +57,29 @@ class _FrontDeskScreenState extends ConsumerState<FrontDeskScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Top Bar: Search, Filters, and Action
-            Row(
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Expanded(
-                  flex: 3,
+                SizedBox(
+                  width: 280,
                   child: TextField(
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.search, size: 20),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.textMuted),
                       hintText: 'Search room number...',
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      fillColor: Colors.white,
+                      filled: true,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.borderLight)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.borderLight)),
                     ),
                     onChanged: (val) => setState(() => _searchQuery = val),
                   ),
                 ),
-                const SizedBox(width: 16),
                 _filterButton('ALL', 'All Rooms'),
-                const SizedBox(width: 8),
                 _filterButton('AVAILABLE', 'Available'),
-                const SizedBox(width: 8),
                 _filterButton('OCCUPIED', 'Occupied'),
-                const SizedBox(width: 8),
                 _filterButton('CLEANING', 'Dirty / Cleaning'),
               ],
             ),
@@ -152,127 +155,228 @@ class _FrontDeskScreenState extends ConsumerState<FrontDeskScreen> {
 
   Widget _filterButton(String code, String label) {
     final isSelected = _filter == code;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => setState(() => _filter = code),
-      selectedColor: AppColors.primaryNavy,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : AppColors.textPrimary,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        fontSize: 12,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => _filter = code),
+        borderRadius: BorderRadius.circular(10),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.electricBlue : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? AppColors.electricBlue : AppColors.borderLight,
+              width: 1,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.electricBlue.withOpacity(0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppColors.textPrimary,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              fontSize: 12,
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildRoomCard(BuildContext context, RoomModel room, StayRecord? activeStay, HotelSettingsState settings) {
     Color statusColor;
+    Color statusBg;
     String statusText;
 
     if (room.occupancyStatus == 'occupied') {
-      statusColor = AppColors.dangerCrimson;
+      statusColor = AppColors.occupiedIndigo;
+      statusBg = AppColors.occupiedBg;
       statusText = 'Occupied';
     } else if (room.housekeepingStatus == 'cleaning_required') {
-      statusColor = AppColors.warningOrange;
-      statusText = 'Cleaning Req.';
+      statusColor = AppColors.cleaningOrange;
+      statusBg = AppColors.cleaningBg;
+      statusText = 'Dirty / Cleaning';
     } else if (room.housekeepingStatus == 'cleaning_in_progress') {
       statusColor = AppColors.infoBlue;
-      statusText = 'Cleaning';
+      statusBg = AppColors.infoBlue.withOpacity(0.12);
+      statusText = 'Cleaning in Prog.';
     } else if (room.maintenanceStatus == 'out_of_service') {
-      statusColor = Colors.grey.shade700;
+      statusColor = AppColors.outOfServiceRed;
+      statusBg = AppColors.outOfServiceBg;
       statusText = 'Out of Service';
     } else {
-      statusColor = AppColors.successEmerald;
+      statusColor = AppColors.availableGreen;
+      statusBg = AppColors.availableBg;
       statusText = 'Available';
     }
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: AppColors.cardShadow,
+      ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          if (room.occupancyStatus == 'occupied' && activeStay != null) {
-            _showCheckoutDialog(context, room, activeStay, settings);
-          } else if (RoomService.canCheckIn(room)) {
-            _showCheckInDialog(context, room, settings);
-          } else if (room.housekeepingStatus == 'cleaning_required') {
-            _showQuickCleaningDialog(context, room);
-          }
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: Room Number & Status Pill
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              color: statusColor.withOpacity(0.12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Room ${room.roomNumber}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: statusColor,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (room.occupancyStatus == 'occupied' && activeStay != null) {
+              _showCheckoutDialog(context, room, activeStay, settings);
+            } else if (RoomService.canCheckIn(room)) {
+              _showCheckInDialog(context, room, settings);
+            } else if (room.housekeepingStatus == 'cleaning_required') {
+              _showQuickCleaningDialog(context, room);
+            }
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: Room Number, Floor, and Status Pill
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: statusBg,
+                  border: Border(bottom: BorderSide(color: statusColor.withOpacity(0.15))),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Room ${room.roomNumber}',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: statusColor,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      statusText,
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Body
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    room.categoryName,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  if (activeStay != null) ...[
-                    Text(
-                      activeStay.guestName,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primaryNavy),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      'Out: ${activeStay.expectedCheckOutDate.toString().substring(0, 10)}',
-                      style: const TextStyle(fontSize: 10, color: AppColors.neutralGray),
-                    ),
-                  ] else ...[
-                    Text(
-                      'HK: ${room.housekeepingStatus.replaceAll('_', ' ').toUpperCase()}',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: room.housekeepingStatus == 'clean' ? AppColors.successEmerald : AppColors.warningOrange,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: statusColor.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusText,
+                            style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Rate: ₹${room.categoryName == HotelDefaults.catElegant ? "2,190" : "Tariff"}',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                    ),
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+
+              // Card Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            room.categoryName,
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          if (activeStay != null) ...[
+                            Row(
+                              children: [
+                                const Icon(Icons.person_rounded, size: 14, color: AppColors.occupiedIndigo),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    activeStay.guestName,
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryNavy),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              'Expected Out: ${activeStay.expectedCheckOutDate.toString().substring(0, 10)}',
+                              style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
+                            ),
+                          ] else ...[
+                            Text(
+                              'Single: ₹${room.categoryName == HotelDefaults.catElegant ? "1,890" : "Tariff"} • Double: ₹${room.categoryName == HotelDefaults.catElegant ? "2,190" : "Tariff"}',
+                              style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'HK: ${room.housekeepingStatus.replaceAll('_', ' ').toUpperCase()}',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: room.housekeepingStatus == 'clean' ? AppColors.availableGreen : AppColors.cleaningOrange,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+
+                      // Action prompt badge at bottom
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundSubtle,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          activeStay != null
+                              ? 'Tap to Checkout & Bill →'
+                              : (RoomService.canCheckIn(room) ? 'Tap to Check In →' : 'Manage Room →'),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: activeStay != null ? AppColors.occupiedIndigo : AppColors.electricBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
